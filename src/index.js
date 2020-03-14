@@ -1,3 +1,4 @@
+require('dotenv').config()
 import express from 'express';
 import bodyParser from 'body-parser';
 import { WebClient } from '@slack/web-api';
@@ -19,7 +20,7 @@ app.listen(PORT, function () {
 });
 
 app.get('/', async (req, res) => {
-  res.status(200).send("Slack status bot");
+  res.status(200).send("Slack status bot status");
 })
 
 app.post('/statusbot', async (req, res) => {

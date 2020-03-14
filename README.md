@@ -7,4 +7,4 @@ Swiggity swooty I'm coming for that booty
 - Optionally add `PORT=[local-port-here]`
 
 ## Running
-- Run locally via npm run watch
+- Run locally via `npm run watch`
