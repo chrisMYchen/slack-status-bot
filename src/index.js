@@ -78,8 +78,42 @@ app.post('/statusbot', async (req, res) => {
       token
     });
 
-    const { members: memberIdsInChannel } = channelInfo.channel;
-    const response = {};
+    const slackbot_id = 'USLACKBOT';
+    const statusmonitor_id = 'U0100M7B8FJ';
+
+    const filteredMembers = members.filter(member => (member.id !== slackbot_id && member.id !== statusmonitor_id));
+
+
+    const membersInfo = filteredMembers.map(member => {
+      const id = member.id;
+      const status_text = member.profile.status_text;
+      const status_emoji = member.profile.status_emoji;
+      const status_expiration = member.profile.status_expiration;
+
+      return (
+        `<@${id}>'s status: ${status_emoji} ${status_text}\n`
+      )
+    })
+
+
+    for (const member of members) {
+      const id = member.id
+      const status_text = member.profile.status_text;
+    }
+
+
+
+    const response = {
+      "blocks": [
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": `${membersInfo}`
+          }
+        }
+      ]
+    }
     res.json(response);
   }
   catch (err) {

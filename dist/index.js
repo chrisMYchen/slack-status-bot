@@ -12,7 +12,9 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
-var PORT = process.env.PORT || 5000;
+require('dotenv').config();
+
+var PORT = process.env.PORT || 3000;
 var token = process.env.SLACK_TOKEN;
 var web = new _webApi.WebClient(token);
 var botName = 'vantalunch';
@@ -22,13 +24,16 @@ app.use(_bodyParser["default"].json());
 app.use(_bodyParser["default"].urlencoded({
   extended: false
 }));
+app.listen(PORT, function () {
+  console.log('Example app listening on port: ' + PORT + '!');
+});
 app.get('/', /*#__PURE__*/function () {
   var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(req, res) {
     return regeneratorRuntime.wrap(function _callee$(_context) {
       while (1) {
         switch (_context.prev = _context.next) {
           case 0:
-            res.status(200).send("Slack status bot");
+            res.status(200).send("Slack status bot status");
 
           case 1:
           case "end":
