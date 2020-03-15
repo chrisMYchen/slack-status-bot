@@ -94,8 +94,6 @@ app.post('/statusbot', async (req, res) => {
 
     const membersInfo = getMembersInfo(members);
 
-
-
     const response = {
       "blocks": [
         ...membersInfo
