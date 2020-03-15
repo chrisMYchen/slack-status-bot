@@ -1,8 +1,9 @@
 require('dotenv').config()
 import express from 'express';
 import bodyParser from 'body-parser';
+import { ENGINE_METHOD_ALL } from 'constants';
 import { WebClient } from '@slack/web-api';
-import { getMembersInfo } from "./memberUtils";
+import { getMembersIds, getMembersInfo } from "./memberUtils";
 
 const PORT = process.env.PORT || 3000;
 const token = process.env.SLACK_TOKEN;
@@ -42,45 +43,57 @@ app.post('/statuschange', async (req, res) => {
     const { channels } = await web.conversations.list({
       token
     });
-    // todo: improve this to allow for better channel selection or something
-    const mainChannel = channels.find(channel => channel.name === "statusmonitor");
+    const filteredMembersIds = getMembersIds(members);
+    const membersPresence = filteredMembersIds.map(async function (user) {
+      const { presence } = await web.users.getPresence({
+        token, user
+      });
+      return presence
+    })
+    Promise.all(membersPresence).then(async function (values) {
+      // todo: improve this to allow for better channel selection or something
+      const mainChannel = channels.find(channel => channel.name === "statusmonitor");
 
-    // send new message and save id
-    if (statusMessageId === "") {
-      // makes a new message if not found in last 200 messages, not a problem if have a single channel with this in it
-      const mainChannelId = mainChannel.id;
-      const { messages } = await web.conversations.history({ channel: mainChannelId, token, limit: 200 });
-      const statusMonitorMessage = messages.find(message => message.user === STATUS_MONITOR_ID && !("subtype" in message));
-      const membersInfo = getMembersInfo(members);
-      if (statusMonitorMessage) {
-        // update existing message
-        const { ts } = statusMonitorMessage;
-        const resp = await web.chat.update({
-          ts, channel: mainChannelId, token, as_user: true, parse: "full", blocks: [
-            ...membersInfo
-          ]
-        });
+      // send new message and save id
+      if (statusMessageId === "") {
+        // makes a new message if not found in last 200 messages, not a problem if have a single channel with this in it
+        const mainChannelId = mainChannel.id;
+        const { messages } = await web.conversations.history({ channel: mainChannelId, token, limit: 200 });
+        const statusMonitorMessage = messages.find(message => message.user === STATUS_MONITOR_ID && !("subtype" in message));
+
+        const membersInfo = await getMembersInfo(members, values);
+
+        if (statusMonitorMessage) {
+          // update existing message
+          const { ts } = statusMonitorMessage;
+          const resp = await web.chat.update({
+            ts, channel: mainChannelId, token, as_user: true, parse: "full", blocks: [
+              ...membersInfo
+            ]
+          });
+        }
+        else {
+          await web.chat.postMessage({
+            channel: mainChannelId, token, blocks: [
+              ...membersInfo
+            ]
+          });
+        }
       }
-      else {
-        await web.chat.postMessage({
-          channel: mainChannelId, token, blocks: [
-            ...membersInfo
-          ]
-        });
-      }
-    }
-    res.status(200);
+      res.status(200);
+    })
   }
   catch (err) {
     console.log(err);
     return res.status(500).send('Something blew up. We\'re looking into it.');
   }
-});
-
-app.post('/statusbot', async (req, res) => {
+}); 
+  
+  app.post('/statusbot', async (req, res) => {
   try {
-    const slackReqObj = req.body;
-    console.log(slackReqObj);
+    
+      const slackReqObj = req.body;
+        console.log(slackReqObj);
     if ('challenge' in slackReqObj) {
       const challengeData = {
         challenge: slackReqObj.challenge
@@ -89,18 +102,25 @@ app.post('/statusbot', async (req, res) => {
     }
     const { channel_id: channelId } = slackReqObj;
     const { members } = await web.users.list({
-      token
+    token
+  });
+  const filteredMembersIds = getMembersIds(members);
+  const membersPresence = filteredMembersIds.map(async function (user) {
+    const { presence } = await web.users.getPresence({
+      token, user
     });
-
-    const membersInfo = getMembersInfo(members);
-
+    return presence
+  })
+  Promise.all(membersPresence).then(async function (values) { 
+    const membersInfo = await getMembersInfo(members, values);
     const response = {
       "blocks": [
         ...membersInfo
-      ]
+  ]
     }
     res.json(response);
-  }
+  })
+}
   catch (err) {
     console.log(err);
     return res.status(500).send('Something blew up. We\'re looking into it.');
