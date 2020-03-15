@@ -2,15 +2,15 @@ require('dotenv').config()
 import express from 'express';
 import bodyParser from 'body-parser';
 import { WebClient } from '@slack/web-api';
-import { getMemberInfo } from "./memberUtils";
+import { getMembersInfo } from "./memberUtils";
 
 const PORT = process.env.PORT || 3000;
 const token = process.env.SLACK_TOKEN;
 const web = new WebClient(token);
 
 
-const botName = 'vantalunch';
-const botId = 'UK9BK01V1';
+export const SLACK_BOT_ID = 'USLACKBOT';
+export const STATUS_MONITOR_ID = 'U0100M7B8FJ';
 
 const app = express();
 app.use(bodyParser.json());
@@ -29,16 +29,13 @@ let mainChannelId = "";
 app.post('/statuschange', async (req, res) => {
   try {
     const slackReqObj = req.body;
-    // console.log(slackReqObj);
     if ('challenge' in slackReqObj) {
       const challengeData = {
         challenge: slackReqObj.challenge
       }
       res.json(challengeData);
     }
-    console.log(slackReqObj);
     const { event: { user: { profile: updatedProfile } } } = slackReqObj;
-    console.log(updatedProfile);
     const { members } = await web.users.list({
       token
     });
@@ -46,16 +43,45 @@ app.post('/statuschange', async (req, res) => {
       token
     });
     // todo: improve this to allow for better channel selection or something
-    const mainChannel = channels[0];
+    const mainChannel = channels.find(channel => channel.name === "statusmonitor");
 
-    const memberInfo = getMemberInfo(members);
-    console.log(memberInfo);
     // send new message and save id
     if (statusMessageId === "") {
-
+      // makes a new message if not found in last 200 messages, not a problem if have a single channel with this in it
+      const mainChannelId = mainChannel.id;
+      const { messages } = await web.conversations.history({ channel: mainChannelId, token, limit: 200 });
+      const statusMonitorMessage = messages.find(message => message.user === STATUS_MONITOR_ID && !("subtype" in message));
+      const membersInfo = getMembersInfo(members);
+      if (statusMonitorMessage) {
+        // update existing message
+        const { ts } = statusMonitorMessage;
+        const resp = await web.chat.update({
+          ts, channel: mainChannelId, token, as_user: true, parse: "full", blocks: [
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": `${membersInfo}`
+              }
+            }
+          ]
+        });
+      }
+      else {
+        await web.chat.postMessage({
+          channel: mainChannelId, token, blocks: [
+            {
+              "type": "section",
+              "text": {
+                "type": "mrkdwn",
+                "text": `${membersInfo}`
+              }
+            }
+          ]
+        });
+      }
     }
-    const response = {};
-    res.json(response);
+    res.status(200);
   }
   catch (err) {
     console.log(err);
@@ -78,22 +104,7 @@ app.post('/statusbot', async (req, res) => {
       token
     });
 
-    const slackbot_id = 'USLACKBOT';
-    const statusmonitor_id = 'U0100M7B8FJ';
-
-    const filteredMembers = members.filter(member => (member.id !== slackbot_id && member.id !== statusmonitor_id));
-
-
-    const membersInfo = filteredMembers.map(member => {
-      const id = member.id;
-      const status_text = member.profile.status_text;
-      const status_emoji = member.profile.status_emoji;
-      const status_expiration = member.profile.status_expiration;
-
-      return (
-        `<@${id}>'s status: ${status_emoji} ${status_text}\n`
-      )
-    })
+    const membersInfo = getMembersInfo(members);
 
 
     for (const member of members) {
