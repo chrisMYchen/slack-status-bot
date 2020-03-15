@@ -7,122 +7,77 @@ import { getMembersIds, getMembersInfo } from "./memberUtils";
 
 const PORT = process.env.PORT || 3000;
 const token = process.env.SLACK_TOKEN;
-const web = new WebClient(token);
+const secret = process.env.SLACK_SIGNING_SECRET;
 
+const { App } = require('@slack/bolt');
+
+// Initializes the app with your bot token and signing secret
+const app = new App({
+  token: token,
+  signingSecret: secret
+});
 
 export const SLACK_BOT_ID = 'USLACKBOT';
 export const STATUS_MONITOR_ID = 'U0100M7B8FJ';
 
-const app = express();
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-
-app.listen(PORT, function () {
-  console.log('Example app listening on port: ' + PORT + '!');
-});
-
-app.get('/', async (req, res) => {
-  res.status(200).send("Slack status bot status");
-})
-
-let statusMessageId = "";
-let mainChannelId = "";
-app.post('/statuschange', async (req, res) => {
+app.event('user_change', async ({ event, context }) => {
   try {
-    const slackReqObj = req.body;
-    if ('challenge' in slackReqObj) {
-      const challengeData = {
-        challenge: slackReqObj.challenge
-      }
-      res.json(challengeData);
-    }
-    const { event: { user: { profile: updatedProfile } } } = slackReqObj;
-    const { members } = await web.users.list({
-      token
-    });
-    const { channels } = await web.conversations.list({
-      token
+    // Get all members
+    const { members } = await app.client.users.list({
+      token: token
     });
     const filteredMembersIds = getMembersIds(members);
     const membersPresence = filteredMembersIds.map(async function (user) {
-      const { presence } = await web.users.getPresence({
-        token, user
+      const { presence } = await app.client.users.getPresence({
+        token: token, 
+        user: user
       });
       return presence
     })
-    Promise.all(membersPresence).then(async function (values) {
-      // todo: improve this to allow for better channel selection or something
-      const mainChannel = channels.find(channel => channel.name === "statusmonitor");
-
-      // send new message and save id
-      if (statusMessageId === "") {
-        // makes a new message if not found in last 200 messages, not a problem if have a single channel with this in it
-        const mainChannelId = mainChannel.id;
-        const { messages } = await web.conversations.history({ channel: mainChannelId, token, limit: 200 });
-        const statusMonitorMessage = messages.find(message => message.user === STATUS_MONITOR_ID && !("subtype" in message));
-
-        const membersInfo = await getMembersInfo(members, values);
-
-        if (statusMonitorMessage) {
-          // update existing message
-          const { ts } = statusMonitorMessage;
-          const resp = await web.chat.update({
-            ts, channel: mainChannelId, token, as_user: true, parse: "full", blocks: [
-              ...membersInfo
-            ]
-          });
-        }
-        else {
-          await web.chat.postMessage({
-            channel: mainChannelId, token, blocks: [
-              ...membersInfo
-            ]
-          });
-        }
-      }
-      res.status(200);
+    const statusBlocks = await Promise.all(membersPresence).then(async function (values) {
+      const membersInfo = await getMembersInfo(members, values);
+      return membersInfo;
     })
-  }
-  catch (err) {
-    console.log(err);
-    return res.status(500).send('Something blew up. We\'re looking into it.');
-  }
-}); 
-  
-  app.post('/statusbot', async (req, res) => {
-  try {
-    
-      const slackReqObj = req.body;
-        console.log(slackReqObj);
-    if ('challenge' in slackReqObj) {
-      const challengeData = {
-        challenge: slackReqObj.challenge
+
+    /* view.publish is the method that your app uses to push a view to the Home tab */
+    const result = await app.client.views.publish({
+
+      /* retrieves your xoxb token from context */
+      token: context.botToken,
+
+      /* the user that opened your app's app home */
+      user_id: event.user.id,
+
+      /* the view payload that appears in the app home*/
+      view: {
+        type: 'home',
+        callback_id: 'home_view',
+
+        /* body of the view */
+        blocks: [
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": `Hi there! Below you'll find the status of all the members in our workspace.`
+            }
+          },
+          {
+            "type": "divider"
+          },
+          ...statusBlocks
+        ]
       }
-      res.json(data);
-    }
-    const { channel_id: channelId } = slackReqObj;
-    const { members } = await web.users.list({
-    token
-  });
-  const filteredMembersIds = getMembersIds(members);
-  const membersPresence = filteredMembersIds.map(async function (user) {
-    const { presence } = await web.users.getPresence({
-      token, user
     });
-    return presence
-  })
-  Promise.all(membersPresence).then(async function (values) { 
-    const membersInfo = await getMembersInfo(members, values);
-    const response = {
-      "blocks": [
-        ...membersInfo
-  ]
-    }
-    res.json(response);
-  })
-}
-  catch (err) {
-    console.log(err);
-    return res.status(500).send('Something blew up. We\'re looking into it.');
+  }
+  catch (error) {
+    console.error(error);
   }
 });
+
+(async () => {
+  // Start your app
+  await app.start(PORT || 3000);
+
+  console.log('⚡️ Bolt app is running!');
+})();
