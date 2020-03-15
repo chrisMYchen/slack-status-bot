@@ -57,26 +57,14 @@ app.post('/statuschange', async (req, res) => {
         const { ts } = statusMonitorMessage;
         const resp = await web.chat.update({
           ts, channel: mainChannelId, token, as_user: true, parse: "full", blocks: [
-            {
-              "type": "section",
-              "text": {
-                "type": "mrkdwn",
-                "text": `${membersInfo}`
-              }
-            }
+            ...membersInfo
           ]
         });
       }
       else {
         await web.chat.postMessage({
           channel: mainChannelId, token, blocks: [
-            {
-              "type": "section",
-              "text": {
-                "type": "mrkdwn",
-                "text": `${membersInfo}`
-              }
-            }
+            ...membersInfo
           ]
         });
       }
@@ -110,13 +98,7 @@ app.post('/statusbot', async (req, res) => {
 
     const response = {
       "blocks": [
-        {
-          "type": "section",
-          "text": {
-            "type": "mrkdwn",
-            "text": `${membersInfo}`
-          }
-        }
+        ...membersInfo
       ]
     }
     res.json(response);

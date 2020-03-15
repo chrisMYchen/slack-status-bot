@@ -13,12 +13,18 @@ export const getMembersInfo = (members) => {
         if (status_expiration)
             return_string = return_string + ` <!date^${status_expiration}^until {time}|until 11:59 PM>`
         return_string = return_string + `\n`
-        // `<@${id}>: ${status_emoji} ${status_text} \n`;
 
-        return (
-            return_string
-            // `<@${id}>: ${status_emoji} ${status_text} until <!date^${status_expiration}^until {time}|until 11:59 PM> \n`
-        )
+        
+        const return_section =
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": `${return_string}`
+                }
+            }
+
+        return return_section
     })
-    return membersInfo.join("");
+    return membersInfo;
 };
