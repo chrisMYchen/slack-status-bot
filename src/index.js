@@ -19,10 +19,30 @@ const app = new App({
   signingSecret: secret
 });
 
+// TODO: create authorizeFn that returns botToken, botId, botUserId
+// const authorizeFn = async ({ teamId, enterpriseId }) => {
+//   // Fetch team info from database
+//   for (const team of installations) {
+//     // Check for matching teamId and enterpriseId in the installations array
+//     if ((team.teamId === teamId) && (team.enterpriseId === enterpriseId)) {
+//       // This is a match. Use these installation credentials.
+//       return {
+//         // You could also set userToken instead
+//         botToken: team.botToken,
+//         botId: team.botId,
+//         botUserId: team.botUserId
+//       };
+//     }
+//   }
+
+//   throw new Error('No matching authorizations');
+// }
+
 const router = express.Router();
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({ extended: false }));
 
+// TODO: persist data that authorizeFn will use :) 
 router.get("/auth", async (req, res) => {
   if (!req.query.code) { // access denied
     return;
@@ -42,29 +62,7 @@ router.get("/auth", async (req, res) => {
   })
 });
 
-// '&redirect_uri=' + process.env.REDIRECT_URI,
-/*
- var options = {
-        uri: 'https://slack.com/api/oauth.access?code='
-            +req.query.code+
-            '&client_id='+process.env.CLIENT_ID+
-            '&client_secret='+process.env.CLIENT_SECRET+
-            '&redirect_uri='+process.env.REDIRECT_URI,
-        method: 'GET'
-    }
-    request(options, (error, response, body) => {
-        var JSONresponse = JSON.parse(body)
-        if (!JSONresponse.ok){
-            console.log(JSONresponse)
-            res.send("Error encountered: \n"+JSON.stringify(JSONresponse)).status(200).end()
-        }else{
-            console.log(JSONresponse)
-            res.send("Success!")
-        }
-    })
-    */
 export const SLACK_BOT_ID = 'USLACKBOT';
-export const STATUS_MONITOR_ID = 'U0100M7B8FJ';
 
 app.event('user_change', async ({ event, context }) => {
   try {
