@@ -29,7 +29,7 @@ app.event('user_change', async ({ event, context }) => {
     const filteredMembersIds = getMembersIds(members);
     const membersPresence = filteredMembersIds.map(async function (user) {
       const { presence } = await app.client.users.getPresence({
-        token: token, 
+        token: token,
         user: user
       });
       return presence
@@ -40,42 +40,44 @@ app.event('user_change', async ({ event, context }) => {
     })
 
     /* view.publish is the method that your app uses to push a view to the Home tab */
-    const result = await app.client.views.publish({
 
-      /* retrieves your xoxb token from context */
-      token: context.botToken,
+    await Promise.all(filteredMembersIds.map(id => {
+      return (
+        app.client.views.publish({
 
-      /* the user that opened your app's app home */
-      user_id: event.user.id,
+          /* retrieves your xoxb token from context */
+          token: context.botToken,
 
-      /* the view payload that appears in the app home*/
-      view: {
-        type: 'home',
-        callback_id: 'home_view',
+          /* the user that opened your app's app home */
+          user_id: event.user.id,
 
-        /* body of the view */
-        blocks: [
-          {
-            "type": "section",
-            "text": {
-              "type": "mrkdwn",
-              "text": `Hi there! Below you'll find the status of all the members in our workspace.`
-            }
-          },
-          {
-            "type": "divider"
-          },
-          ...statusBlocks
-        ]
-      }
-    });
+          /* the view payload that appears in the app home*/
+          view: {
+            type: 'home',
+            callback_id: 'home_view',
+
+            /* body of the view */
+            blocks: [
+              {
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": `Hi there! Below you'll find the status of all the members in our workspace.`
+                }
+              },
+              {
+                "type": "divider"
+              },
+              ...statusBlocks
+            ]
+          }
+        })
+    )}))
   }
   catch (error) {
-    console.error(error);
-  }
+  console.error(error);
+}
 });
-
-
 
 (async () => {
   // Start your app
