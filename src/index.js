@@ -8,6 +8,8 @@ import { getMembersIds, getMembersInfo } from "./memberUtils";
 const PORT = process.env.PORT || 3000;
 const token = process.env.SLACK_TOKEN;
 const secret = process.env.SLACK_SIGNING_SECRET;
+import request from 'request';
+
 
 const { App } = require('@slack/bolt');
 
@@ -17,6 +19,50 @@ const app = new App({
   signingSecret: secret
 });
 
+const router = express.Router();
+router.use(bodyParser.json());
+router.use(bodyParser.urlencoded({ extended: false }));
+
+router.get("/auth", async (req, res) => {
+  if (!req.query.code) { // access denied
+    return;
+  }
+  var data = {
+    form: {
+      client_id: process.env.CLIENT_ID,
+      client_secret: process.env.CLIENT_SECRET,
+      code: req.query.code
+    }
+  };
+  request.post('https://slack.com/api/oauth.v2.access', data, function (error, response, body) {
+    if (!error && response.statusCode == 200) {
+      // OAuth done- redirect the user to wherever
+      res.status(200).send("Success!");
+    }
+  })
+});
+
+// '&redirect_uri=' + process.env.REDIRECT_URI,
+/*
+ var options = {
+        uri: 'https://slack.com/api/oauth.access?code='
+            +req.query.code+
+            '&client_id='+process.env.CLIENT_ID+
+            '&client_secret='+process.env.CLIENT_SECRET+
+            '&redirect_uri='+process.env.REDIRECT_URI,
+        method: 'GET'
+    }
+    request(options, (error, response, body) => {
+        var JSONresponse = JSON.parse(body)
+        if (!JSONresponse.ok){
+            console.log(JSONresponse)
+            res.send("Error encountered: \n"+JSON.stringify(JSONresponse)).status(200).end()
+        }else{
+            console.log(JSONresponse)
+            res.send("Success!")
+        }
+    })
+    */
 export const SLACK_BOT_ID = 'USLACKBOT';
 export const STATUS_MONITOR_ID = 'U0100M7B8FJ';
 
@@ -72,16 +118,19 @@ app.event('user_change', async ({ event, context }) => {
             ]
           }
         })
-    )}))
+      )
+    }))
   }
   catch (error) {
-  console.error(error);
-}
+    console.error(error);
+  }
 });
 
 (async () => {
   // Start your app
+  const expressApp = app.receiver.app;
   await app.start(PORT || 3000);
+  expressApp.use(router);
 
-  console.log('⚡️ Bolt app is running!');
 })();
+console.log('⚡️ Bolt app is running!');
