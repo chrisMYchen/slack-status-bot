@@ -49,7 +49,7 @@ app.event('user_change', async ({ event, context }) => {
           token: context.botToken,
 
           /* the user that opened your app's app home */
-          user_id: event.user.id,
+          user_id: id,
 
           /* the view payload that appears in the app home*/
           view: {
