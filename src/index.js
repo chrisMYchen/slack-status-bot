@@ -19,10 +19,36 @@ const app = new App({
   signingSecret: secret
 });
 
+<<<<<<< HEAD
+=======
+// TODO: create authorizeFn that returns botToken, botId, botUserId
+// const authorizeFn = async ({ teamId, enterpriseId }) => {
+//   // Fetch team info from database
+//   for (const team of installations) {
+//     // Check for matching teamId and enterpriseId in the installations array
+//     if ((team.teamId === teamId) && (team.enterpriseId === enterpriseId)) {
+//       // This is a match. Use these installation credentials.
+//       return {
+//         // You could also set userToken instead
+//         botToken: team.botToken,
+//         botId: team.botId,
+//         botUserId: team.botUserId
+//       };
+//     }
+//   }
+
+//   throw new Error('No matching authorizations');
+// }
+
+>>>>>>> 483ec676fd5b5bb58adfab01ffd550bc3ca8b8a9
 const router = express.Router();
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({ extended: false }));
 
+<<<<<<< HEAD
+=======
+// TODO: persist data that authorizeFn will use :) 
+>>>>>>> 483ec676fd5b5bb58adfab01ffd550bc3ca8b8a9
 router.get("/auth", async (req, res) => {
   if (!req.query.code) { // access denied
     return;
@@ -42,6 +68,7 @@ router.get("/auth", async (req, res) => {
   })
 });
 
+<<<<<<< HEAD
 // '&redirect_uri=' + process.env.REDIRECT_URI,
 /*
  var options = {
@@ -63,8 +90,9 @@ router.get("/auth", async (req, res) => {
         }
     })
     */
+=======
+>>>>>>> 483ec676fd5b5bb58adfab01ffd550bc3ca8b8a9
 export const SLACK_BOT_ID = 'USLACKBOT';
-export const STATUS_MONITOR_ID = 'U0100M7B8FJ';
 
 app.event('user_change', async ({ event, context }) => {
   try {
