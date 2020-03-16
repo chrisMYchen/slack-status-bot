@@ -38,10 +38,6 @@
   },
   "devDependencies": {
     "nodemon": "^1.19.1",
-<<<<<<< HEAD
-=======
-    "request": "^2.88.2",
->>>>>>> 483ec676fd5b5bb58adfab01ffd550bc3ca8b8a9
     "tape": "^4.7.0"
   },
   "repository": {

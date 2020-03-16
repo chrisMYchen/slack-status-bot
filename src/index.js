@@ -19,8 +19,6 @@ const app = new App({
   signingSecret: secret
 });
 
-<<<<<<< HEAD
-=======
 // TODO: create authorizeFn that returns botToken, botId, botUserId
 // const authorizeFn = async ({ teamId, enterpriseId }) => {
 //   // Fetch team info from database
@@ -40,15 +38,11 @@ const app = new App({
 //   throw new Error('No matching authorizations');
 // }
 
->>>>>>> 483ec676fd5b5bb58adfab01ffd550bc3ca8b8a9
 const router = express.Router();
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({ extended: false }));
 
-<<<<<<< HEAD
-=======
 // TODO: persist data that authorizeFn will use :) 
->>>>>>> 483ec676fd5b5bb58adfab01ffd550bc3ca8b8a9
 router.get("/auth", async (req, res) => {
   if (!req.query.code) { // access denied
     return;
@@ -68,30 +62,6 @@ router.get("/auth", async (req, res) => {
   })
 });
 
-<<<<<<< HEAD
-// '&redirect_uri=' + process.env.REDIRECT_URI,
-/*
- var options = {
-        uri: 'https://slack.com/api/oauth.access?code='
-            +req.query.code+
-            '&client_id='+process.env.CLIENT_ID+
-            '&client_secret='+process.env.CLIENT_SECRET+
-            '&redirect_uri='+process.env.REDIRECT_URI,
-        method: 'GET'
-    }
-    request(options, (error, response, body) => {
-        var JSONresponse = JSON.parse(body)
-        if (!JSONresponse.ok){
-            console.log(JSONresponse)
-            res.send("Error encountered: \n"+JSON.stringify(JSONresponse)).status(200).end()
-        }else{
-            console.log(JSONresponse)
-            res.send("Success!")
-        }
-    })
-    */
-=======
->>>>>>> 483ec676fd5b5bb58adfab01ffd550bc3ca8b8a9
 export const SLACK_BOT_ID = 'USLACKBOT';
 
 app.event('user_change', async ({ event, context }) => {
