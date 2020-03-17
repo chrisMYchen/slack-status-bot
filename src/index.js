@@ -106,7 +106,7 @@ app.event('user_change', async ({ event, context }) => {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": `Hi there! Below you'll find the status of all the members in our workspace.`
+                  "text": `Hi there! Below you'll find the status of all the members in our workspace. Members online are marked with :green-dot:, and those offline are marked with :empty-dot:`
                 }
               },
               {

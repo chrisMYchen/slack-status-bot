@@ -43,7 +43,7 @@ const createSection = (members, areOnline) => {
         const status_expiration = member.profile.status_expiration;
 
         // Construct return string
-        let return_string = indicator + ` <@${id}>`;
+        let return_string = indicator + ` <@${id}>  `;
 
         // Check if a user has a status
         if (status_emoji && status_emoji != ':speech_balloon:')
@@ -86,10 +86,33 @@ export const getMembersInfo = async (members, membersPresence) => {
     const offlineMembersWithStatus = filteredMembers.filter((member, index) => (membersPresence[index] !== 'active' && member.profile.status_text));
 
     let allSections = [];
+    allSections.push(
+        {
+			"type": "section",
+			"text": {
+				"type": "mrkdwn",
+				"text": "*Online:*"
+			}
+        }
+        )
     if (onlineMembersWithStatus.length)
         allSections.push(...createSection(onlineMembersWithStatus, true))
     if (onlineMembersNoStatus.length)
         allSections.push(...createSection(onlineMembersNoStatus, true))
+    if (offlineMembersNoStatus.length || offlineMembersNoStatus.length) {
+        allSections.push(
+            {
+                "type": "divider"
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": "*Offline:*"
+                }
+            }
+            )
+    }
     if (offlineMembersWithStatus.length)
         allSections.push(...createSection(offlineMembersWithStatus, false))
     if (offlineMembersNoStatus.length)
