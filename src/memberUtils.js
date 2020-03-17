@@ -1,8 +1,8 @@
 import { SLACK_BOT_ID, STATUS_MONITOR_ID } from "./index";
 
 export const getMembersIds = (members) => {
-    // Filter out Slackbot and this app's bot
-    const filteredMembers = members.filter(member => (!member.is_bot && member.id !== SLACK_BOT_ID));
+    // Filter out Slackbot, other bots, and deleted/deactivated members
+    const filteredMembers = members.filter(member => (!member.is_bot && member.id !== SLACK_BOT_ID && !member.deleted));
 
     const membersIds = filteredMembers.map(member => member.id);
     return membersIds
@@ -10,7 +10,7 @@ export const getMembersIds = (members) => {
 
 export const getMembersInfo = async (members, membersPresence) => {
     // Filter out Slackbot and this app's bot
-    const filteredMembers = members.filter(member => (!member.is_bot && member.id !== SLACK_BOT_ID));
+    const filteredMembers = members.filter(member => (!member.is_bot && member.id !== SLACK_BOT_ID && !member.deleted));
 
         // Create a list of sections (one for each user)
         let membersInfo = filteredMembers.map((member, index) => {
